@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 })
 
 export const viewport: Viewport = {
-  themeColor: '#050510',
+  themeColor: '#050505',
   colorScheme: 'dark',
   width: 'device-width',
   initialScale: 1,
@@ -24,17 +24,29 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://bmw-m440i-showcase.vercel.app'),
+
   title: {
     default: `${SITE_NAME} | ${SITE_TAGLINE}`,
     template: `%s | ${SITE_NAME}`,
   },
+
   description: SITE_DESCRIPTION,
-  keywords: ['BMW', 'M440i', '3D', 'Gran Coupé', 'M Performance', 'configurator'],
+
+  keywords: [
+    'BMW',
+    'M440i',
+    '3D',
+    'Gran Coupé',
+    'M Performance',
+    'configurator',
+  ],
+
   openGraph: {
     title: `${SITE_NAME} | ${SITE_TAGLINE}`,
     description: SITE_DESCRIPTION,
     url: 'https://bmw-m440i-showcase.vercel.app',
     siteName: SITE_NAME,
+
     images: [
       {
         url: '/images/m440i_cta_bg.jpg',
@@ -43,15 +55,18 @@ export const metadata: Metadata = {
         alt: 'BMW M440i Gran Coupé',
       },
     ],
+
     type: 'website',
     locale: 'en_US',
   },
+
   twitter: {
     card: 'summary_large_image',
     title: `${SITE_NAME} | ${SITE_TAGLINE}`,
     description: SITE_DESCRIPTION,
     images: ['/images/m440i_cta_bg.jpg'],
   },
+
   robots: {
     index: true,
     follow: true,
@@ -64,7 +79,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-[#050510] text-white overflow-x-hidden">
+      <body className="min-h-full bg-[#050505] text-white overflow-x-hidden">
         {children}
       </body>
     </html>

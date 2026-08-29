@@ -1,119 +1,235 @@
 'use client'
 
-import { useRef, useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import { useGLTF } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
-/**
- * CarModel — Loads and renders the GLTF/GLB vehicle asset.
- * 
- * Props:
- * - url: Path to the GLTF model (default: '/models/bmw-m440i.glb')
- * - position: Array of [x, y, z] to place the model on the floor
- * - rotation: Array of [x, y, z] to orient the model
- * - scale: Model scale (adjust depending on the exported asset's units)
- */
-export default function CarModel({ 
-  url = '/models/bmw-m440i.glb',
-  position = [0, -1.0, 0],
-  rotation = [0, 0, 0],
-  scale = 1
-}: { 
+type CarModelProps = {
   url?: string
   position?: [number, number, number]
   rotation?: [number, number, number]
   scale?: number
-}) {
+}
+
+export default function CarModel({
+  url = '/models/bmw-m440i.glb',
+  position = [0, -1, 0],
+  rotation = [0, 0, 0],
+  scale = 1,
+}: CarModelProps) {
   const groupRef = useRef<THREE.Group>(null)
-  
-  // Load the real GLTF model
+
   const { scene } = useGLTF(url)
 
-  // Calculate bounding box and apply automatic scaling/centering
-  // useMemo ensures we only compute the bounding box once when the scene loads
-  const { scale: autoScale, positionOffset } = useMemo(() => {
-    const box = new THREE.Box3().setFromObject(scene)
-    const size = box.getSize(new THREE.Vector3())
-    const center = box.getCenter(new THREE.Vector3())
+  const { model, normalizedScale, offset } = useMemo(() => {
+    /**
+     * Clone the hierarchy.
+     *
+     * We additionally clone materials below so paint/glass modifications
+     * never mutate Drei's cached GLTF instance.
+     */
+    const clonedScene = scene.clone(true)
 
-    // A real BMW M440i is ~4.77 meters long.
-    // We assume the longest dimension of the model is the length (Z or X).
-    const maxLength = Math.max(size.x, size.z)
-    
-    // Calculate the scale factor to make the car ~4.7 meters long
-    const scaleFactor = 4.7 / maxLength
+    clonedScene.traverse((child) => {
+      if (!(child instanceof THREE.Mesh)) return
 
-    // Center the model on X and Z, and calculate the Y offset so the 
-    // lowest point (bottom of the tires) sits exactly at local Y = 0.
-    const offsetY = -box.min.y * scaleFactor
-    const offsetX = -center.x * scaleFactor
-    const offsetZ = -center.z * scaleFactor
+      child.castShadow = true
+      child.receiveShadow = true
 
-    // Traverse the scene to enable shadows and update the car paint
-    scene.traverse((child) => {
-      if (child instanceof THREE.Mesh) {
-        child.castShadow = true
-        child.receiveShadow = true
-        
-        // Enhance the body paint to a realistic metallic white
-        if (child.material && child.material.name === 'carpaint') {
-          // Alpine/Mineral White finish
-          child.material.color.set('#f2f4f5') 
-          child.material.metalness = 0.9
-          child.material.roughness = 0.1
-          child.material.envMapIntensity = 2.0 // Boosted for cinematic reflections
-          child.material.needsUpdate = true
-        } else if (child.material && (child.material.name.toLowerCase().includes('glass') || child.material.name.toLowerCase().includes('window'))) {
-          child.material.metalness = 1.0
-          child.material.roughness = 0.0
-          child.material.transparent = true
-          child.material.opacity = 0.7
-          child.material.envMapIntensity = 3.0
-          child.material.needsUpdate = true
-        }
+      if (Array.isArray(child.material)) {
+        child.material = child.material.map((material) => material.clone())
+      } else {
+        child.material = child.material.clone()
       }
     })
 
-    return {
-      scale: scaleFactor * scale,
-      positionOffset: [offsetX, offsetY, offsetZ] as [number, number, number]
-    }
-  }, [scene, scale])
+    /**
+     * Calculate the model's original bounds.
+     */
+    const box = new THREE.Box3().setFromObject(clonedScene)
 
-  // Subtle idle float and cinematic oscillation with mouse tracking
-  useFrame((state) => {
-    const t = state.clock.getElapsedTime()
-    if (groupRef.current) {
-      // The group sits at the target position, and we animate it slightly.
-      groupRef.current.position.y = position[1] + Math.sin(t * 0.55) * 0.015
-      
-      // Calculate target rotation based on base rotation + subtle time drift (approx ±8 degrees)
-      const targetRotationY = rotation[1] + Math.sin(t * 0.1) * 0.15
-      
-      // Add a tiny bit of mouse tracking for extra depth
-      const mouseX = (state.pointer.x * Math.PI) / 30
-      
-      // Smoothly interpolate the rotation for cinematic feel
-      groupRef.current.rotation.y = THREE.MathUtils.lerp(
-        groupRef.current.rotation.y, 
-        targetRotationY + mouseX, 
-        0.05
-      )
+    const size = box.getSize(new THREE.Vector3())
+    const center = box.getCenter(new THREE.Vector3())
+
+    /**
+     * BMW M440i real-world length ≈ 4.77m.
+     *
+     * We normalize whichever horizontal axis is longest.
+     */
+    const longestAxis = Math.max(size.x, size.z)
+
+    const baseScale =
+      longestAxis > 0
+        ? 4.77 / longestAxis
+        : 1
+
+    /**
+     * Center the car horizontally.
+     *
+     * Move the bottom of the model to Y = 0 so
+     * positioning remains predictable.
+     */
+    const offset: [number, number, number] = [
+      -center.x,
+      -box.min.y,
+      -center.z,
+    ]
+
+    /**
+     * Improve materials after cloning.
+     */
+    clonedScene.traverse((child) => {
+      if (!(child instanceof THREE.Mesh)) return
+
+      const materials = Array.isArray(child.material)
+        ? child.material
+        : [child.material]
+
+      materials.forEach((material) => {
+        const name = material.name.toLowerCase()
+
+        /**
+         * BMW body paint.
+         */
+        if (
+          name.includes('carpaint') ||
+          name.includes('paint') ||
+          name.includes('body')
+        ) {
+          material.color.set('#f4f5f6')
+
+          if ('metalness' in material) {
+            material.metalness = 0.82
+          }
+
+          if ('roughness' in material) {
+            material.roughness = 0.16
+          }
+
+          if ('envMapIntensity' in material) {
+            material.envMapIntensity = 1.8
+          }
+
+          material.needsUpdate = true
+        }
+
+        /**
+         * Glass.
+         */
+        if (
+          name.includes('glass') ||
+          name.includes('window') ||
+          name.includes('windshield')
+        ) {
+          if ('metalness' in material) {
+            material.metalness = 0.05
+          }
+
+          if ('roughness' in material) {
+            material.roughness = 0.03
+          }
+
+          if ('envMapIntensity' in material) {
+            material.envMapIntensity = 2
+          }
+
+          material.transparent = true
+          material.opacity = 0.72
+          material.needsUpdate = true
+        }
+      })
+    })
+
+    return {
+      model: clonedScene,
+      normalizedScale: baseScale,
+      offset,
     }
+  }, [scene])
+
+  /**
+   * Cinematic idle animation.
+   */
+  useFrame((state, delta) => {
+    const group = groupRef.current
+
+    if (!group) return
+
+    const time = state.clock.getElapsedTime()
+
+    /**
+     * Very subtle floating motion.
+     */
+    const idleY =
+      position[1] +
+      Math.sin(time * 0.55) * 0.012
+
+    group.position.x = position[0]
+    group.position.y = THREE.MathUtils.damp(
+      group.position.y,
+      idleY,
+      4,
+      delta
+    )
+    group.position.z = position[2]
+
+    /**
+     * Subtle cinematic movement.
+     */
+    const cinematicRotation =
+      Math.sin(time * 0.12) * 0.06
+
+    /**
+     * Mouse parallax.
+     */
+    const mouseRotation =
+      state.pointer.x * 0.07
+
+    const targetRotationY =
+      rotation[1] +
+      cinematicRotation +
+      mouseRotation
+
+    group.rotation.y = THREE.MathUtils.damp(
+      group.rotation.y,
+      targetRotationY,
+      3,
+      delta
+    )
+
+    /**
+     * Preserve supplied X/Z rotation while allowing tiny pitch movement.
+     */
+    group.rotation.x = THREE.MathUtils.damp(
+      group.rotation.x,
+      rotation[0] +
+        state.pointer.y * 0.015,
+      3,
+      delta
+    )
+
+    group.rotation.z = THREE.MathUtils.damp(
+      group.rotation.z,
+      rotation[2],
+      3,
+      delta
+    )
   })
 
   return (
-    <group ref={groupRef} position={position} rotation={rotation}>
-      {/* We apply the computed scale and offset to the scene itself */}
-      <primitive 
-        object={scene} 
-        scale={autoScale} 
-        position={positionOffset} 
+    <group
+      ref={groupRef}
+      position={position}
+      rotation={rotation}
+    >
+      <primitive
+        object={model}
+        position={offset}
+        scale={normalizedScale * scale}
       />
     </group>
   )
 }
 
-// Preload the model so it starts downloading immediately
 useGLTF.preload('/models/bmw-m440i.glb')

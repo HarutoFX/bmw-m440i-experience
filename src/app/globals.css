@@ -13,14 +13,14 @@
   --color-m-blue: #0653b6;
 
   /* Surface Colors */
-  --color-surface-base: #050510;
+  --color-surface-base: #050505;
   --color-surface-card: rgba(255, 255, 255, 0.04);
   --color-surface-card-hover: rgba(255, 255, 255, 0.07);
   --color-border: rgba(255, 255, 255, 0.08);
 
   /* Typography */
   --font-sans: var(--font-geist-sans), system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), 'Courier New', monospace;
+  --font-mono: var(--font-geist-mono), "Courier New", monospace;
 }
 
 /* ─── Base Reset ─────────────────────────────────────────────────────────────── */
@@ -84,7 +84,6 @@ body {
 
 /* ─── Canvas Utilities ───────────────────────────────────────────────────────── */
 
-/* Ensure Three.js canvas fills its container */
 canvas {
   display: block;
 }

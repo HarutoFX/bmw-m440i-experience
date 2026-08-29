@@ -1,19 +1,22 @@
 'use client'
 
-import { Suspense } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
-import { OrbitControls, ContactShadows, Html, MeshReflectorMaterial, Environment } from '@react-three/drei'
+import {
+  ContactShadows,
+  Environment,
+  Html,
+  MeshReflectorMaterial,
+  OrbitControls,
+} from '@react-three/drei'
+
 import CarModel from './CarModel'
 
-/**
- * HeroScene — Primary WebGL canvas for the BMW M440i homepage.
- *
- * Cinematic three-point lighting — all lights are Three.js primitives,
- * no async HDR or texture downloads. Renders immediately.
- *
- * Key fix from v1: removed invalid `gl.shadowMap` that was silently
- * corrupting the WebGL renderer. Use the top-level `shadows` prop instead.
- */
+type ViewportType =
+  | 'mobile'
+  | 'tablet'
+  | 'desktop'
+
 export default function HeroScene() {
   return (
     <div className="w-full h-full">
@@ -29,198 +32,319 @@ export default function HeroScene() {
           alpha: false,
           powerPreference: 'high-performance',
         }}
-        shadows   // ← boolean enables PCF shadow maps cleanly
-        dpr={[1, 2]}
+        shadows
+        dpr={[1, 1.75]}
       >
-        {/* ── Scene Background & Atmosphere ───────────────────────── */}
-        <color attach="background" args={['#050505']} />
-        <fog attach="fog" args={['#050505', 14, 35]} />
+        {/* Background */}
 
-        {/* ── Ambient fallback — keeps nothing fully black ───────── */}
-        <ambientLight color="#1a0505" intensity={0.6} />
+        <color
+          attach="background"
+          args={['#050505']}
+        />
 
+        <fog
+          attach="fog"
+          args={['#050505', 14, 35]}
+        />
 
-        {/* ── Hemisphere — sky warm, ground cold ────────────────── */}
-        <hemisphereLight
+        {/* Ambient */}
+
+        <ambientLight
           color="#1a0505"
+          intensity={0.5}
+        />
+
+        <hemisphereLight
+          color="#291010"
           groundColor="#050505"
           intensity={0.35}
         />
 
-        {/* ── KEY LIGHT — clean neutral ─────────── */}
-        {/*   The main illuminator. Reveals the hood plane, the side */}
-        {/*   body, and the rim of the nearest wheel.               */}
+        {/* Main Key Light */}
+
         <directionalLight
-          position={[4, 4, 10]}
+          position={[5, 6, 8]}
           color="#ffffff"
-          intensity={2.5}
+          intensity={2.6}
           castShadow
           shadow-mapSize-width={2048}
           shadow-mapSize-height={2048}
           shadow-camera-near={0.5}
-          shadow-camera-far={28}
-          shadow-camera-left={-7}
-          shadow-camera-right={7}
-          shadow-camera-top={5}
-          shadow-camera-bottom={-5}
-          shadow-bias={-0.0004}
+          shadow-camera-far={30}
+          shadow-camera-left={-8}
+          shadow-camera-right={8}
+          shadow-camera-top={7}
+          shadow-camera-bottom={-6}
+          shadow-bias={-0.00035}
         />
 
-        {/* ── ROOF HIGHLIGHT — cool neutral ─────────── */}
+        {/* Roof highlight */}
+
         <spotLight
-          position={[0, 8, 2]}
+          position={[0, 8, 3]}
           angle={0.6}
-          penumbra={1}
-          intensity={2.0}
-          color="#e6ebff"
+          penumbra={0.9}
+          intensity={2}
+          color="#e8edff"
           castShadow
         />
 
-        {/* ── FILL LIGHT — soft red, front-left ────────────── */}
+        {/* Front fill */}
+
         <directionalLight
-          position={[-5, 4, 6]}
-          color="#ffb8b8"
-          intensity={0.4}
+          position={[-5, 3, 7]}
+          color="#ffffff"
+          intensity={0.55}
         />
 
-        {/* ── RIM LIGHT — performance red, roofline & left side ───── */}
+        {/* Main red rim */}
+
         <directionalLight
-          position={[-6, 4, -2]}
+          position={[-6, 4, -3]}
           color="#ff0000"
-          intensity={3.0}
+          intensity={2.6}
         />
 
-        {/* ── SECONDARY RIM LIGHT — faint red, rear/right side ───── */}
+        {/* Rear red accent */}
+
         <directionalLight
-          position={[-2, 1, -6]}
-          color="#ff0000"
-          intensity={1.0}
+          position={[-2, 2, -7]}
+          color="#D71920"
+          intensity={1}
         />
 
-        {/* ── ACCENT — deep-red gradient concentrated behind typography ───────── */}
+        {/* Atmospheric red light */}
+
         <pointLight
-          position={[-4, 2.0, -4]}
+          position={[-4, 2, -4]}
           color="#D71920"
           intensity={1.2}
           distance={18}
-          decay={2.2}
+          decay={2}
         />
 
-        {/* ── Background Neon Slash ───────────────────────────────── */}
-        <group position={[4, 2, -10]} rotation={[0, 0, Math.PI / 5]}>
-          <mesh>
-            <cylinderGeometry args={[0.02, 0.02, 30, 8]} />
-            <meshBasicMaterial color="#ffffff" />
-          </mesh>
-          <mesh>
-            <cylinderGeometry args={[0.15, 0.15, 30, 8]} />
-            <meshBasicMaterial color="#ff0000" transparent opacity={0.6} />
-          </mesh>
-          <mesh>
-            <cylinderGeometry args={[0.6, 0.6, 30, 8]} />
-            <meshBasicMaterial color="#D71920" transparent opacity={0.2} />
-          </mesh>
-        </group>
+        {/* Underbody red glow */}
 
-        {/* ── Under-car atmosphere — M Red pool on floor ─────── */}
         <pointLight
-          position={[1.5, -0.9, 0]}
+          position={[1.5, -0.7, 0]}
           color="#D71920"
-          intensity={3.0}
-          distance={5}
-          decay={2.5}
-        />
-
-        {/* ── Headlight & Grille fill — sharp bright white ─────── */}
-        <pointLight
-          position={[2.6, 0.4, 0.5]}
-          color="#ffffff"
-          intensity={1.5}
+          intensity={2.5}
           distance={5}
           decay={2}
         />
 
-        {/* ── Car Model ─────────────────────────────────────────── */}
-        <Suspense
-          fallback={
-            <Html center>
-              <div className="flex flex-col items-center gap-3">
-                <div className="w-8 h-8 rounded-full border-2 border-white/20 border-t-white/90 animate-spin" />
-                <span className="text-white/60 text-xs tracking-widest uppercase font-medium">
-                  Loading Model
-                </span>
-              </div>
-            </Html>
-          }
-        >
-          {/* ── Environment Map — Required for realistic glass reflections ───────── */}
-          <Environment preset="studio" environmentIntensity={0.25} />
+        {/* Front grille highlight */}
+
+        <pointLight
+          position={[3, 1, 1]}
+          color="#ffffff"
+          intensity={1.2}
+          distance={5}
+          decay={2}
+        />
+
+        {/* Background light slash */}
+
+        <BackgroundSlash />
+
+        {/* Vehicle */}
+
+        <Suspense fallback={<ModelLoader />}>
+          <Environment
+            preset="studio"
+            environmentIntensity={0.3}
+          />
+
           <ResponsiveCarModel />
         </Suspense>
 
-        {/* ── Contact shadows — perfectly aligned to floor ────── */}
+        {/* Ground shadow */}
+
         <ContactShadows
           position={[1.5, -1.1, 0]}
-          opacity={1.0}
+          opacity={0.9}
           scale={14}
-          blur={1.8}
-          far={3.0}
-          color="#000005"
+          blur={2}
+          far={3}
+          color="#000000"
         />
 
-        {/* ── Studio floor ──────────────────────────────────────── */}
+        {/* Reflective floor */}
+
         <mesh
           position={[0, -1.1, 0]}
           rotation={[-Math.PI / 2, 0, 0]}
           receiveShadow
         >
           <planeGeometry args={[100, 100]} />
+
           <MeshReflectorMaterial
-            blur={[400, 100]}
-            resolution={1024}
+            blur={[300, 80]}
+            resolution={512}
             mixBlur={1}
-            mixStrength={10}
-            roughness={0.5}
+            mixStrength={7}
+            roughness={0.55}
             depthScale={1}
             minDepthThreshold={0.4}
             maxDepthThreshold={1.4}
             color="#020202"
-            metalness={0.8}
-            mirror={0.3}
+            metalness={0.7}
+            mirror={0.22}
           />
         </mesh>
 
-        {/* ── Camera controls ───────────────────────────────────── */}
+        {/* Controls */}
+
         <OrbitControls
           enablePan={false}
+          enableZoom
+          enableDamping
+          dampingFactor={0.05}
           minDistance={4}
           maxDistance={12}
           minPolarAngle={Math.PI / 3}
-          maxPolarAngle={Math.PI / 2.05} // Lower angle, almost ground level
-          autoRotate={false}
-          target={[-0.5, -0.2, 0]} // Offset target slightly left to help framing
+          maxPolarAngle={Math.PI / 2.05}
+          target={[-0.5, -0.2, 0]}
         />
       </Canvas>
     </div>
   )
 }
 
-function ResponsiveCarModel() {
-  // We can safely use window here because HeroScene is dynamically imported with ssr: false
-  const isMobile = window.innerWidth < 768
-  const isTablet = window.innerWidth >= 768 && window.innerWidth < 1024
+function ModelLoader() {
+  return (
+    <Html center>
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-8 h-8 rounded-full border-2 border-white/20 border-t-white animate-spin" />
 
-  // Scale down on smaller screens to prevent cropping
-  const scale = isMobile ? 0.95 : isTablet ? 1.15 : 1.32
-  
-  // Center more on mobile, offset on desktop
-  const positionX = isMobile ? 0.5 : isTablet ? 1.0 : 1.5
+        <span className="text-white/60 text-xs tracking-widest uppercase">
+          Loading M440i
+        </span>
+      </div>
+    </Html>
+  )
+}
+
+function BackgroundSlash() {
+  return (
+    <group
+      position={[4, 2, -10]}
+      rotation={[0, 0, Math.PI / 5]}
+    >
+      {/* Outer glow */}
+
+      <mesh>
+        <cylinderGeometry
+          args={[0.6, 0.6, 30, 8]}
+        />
+
+        <meshBasicMaterial
+          color="#D71920"
+          transparent
+          opacity={0.12}
+          depthWrite={false}
+        />
+      </mesh>
+
+      {/* Red core */}
+
+      <mesh>
+        <cylinderGeometry
+          args={[0.15, 0.15, 30, 8]}
+        />
+
+        <meshBasicMaterial
+          color="#ff0000"
+          transparent
+          opacity={0.55}
+          depthWrite={false}
+        />
+      </mesh>
+
+      {/* White center */}
+
+      <mesh>
+        <cylinderGeometry
+          args={[0.018, 0.018, 30, 8]}
+        />
+
+        <meshBasicMaterial
+          color="#ffffff"
+          depthWrite={false}
+        />
+      </mesh>
+    </group>
+  )
+}
+
+function ResponsiveCarModel() {
+  const [viewport, setViewport] =
+    useState<ViewportType>('desktop')
+
+  useEffect(() => {
+    const updateViewport = () => {
+      const width = window.innerWidth
+
+      if (width < 768) {
+        setViewport('mobile')
+      } else if (width < 1024) {
+        setViewport('tablet')
+      } else {
+        setViewport('desktop')
+      }
+    }
+
+    updateViewport()
+
+    window.addEventListener(
+      'resize',
+      updateViewport
+    )
+
+    return () => {
+      window.removeEventListener(
+        'resize',
+        updateViewport
+      )
+    }
+  }, [])
+
+  const config = {
+    mobile: {
+      scale: 0.92,
+      position: [0.3, -1.1, 0] as [
+        number,
+        number,
+        number
+      ],
+    },
+
+    tablet: {
+      scale: 1.12,
+      position: [1, -1.1, 0] as [
+        number,
+        number,
+        number
+      ],
+    },
+
+    desktop: {
+      scale: 1.3,
+      position: [1.5, -1.1, 0] as [
+        number,
+        number,
+        number
+      ],
+    },
+  }
+
+  const current = config[viewport]
 
   return (
-    <CarModel 
-      position={[positionX, -1.1, 0]} 
-      rotation={[0, -Math.PI / 6, 0]} 
-      scale={scale} 
+    <CarModel
+      position={current.position}
+      rotation={[0, -Math.PI / 6, 0]}
+      scale={current.scale}
     />
   )
 }
