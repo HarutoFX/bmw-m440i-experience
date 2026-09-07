@@ -1,5 +1,11 @@
 import type { CarSpec, CarColor, NavItem } from '@/types'
 
+// ─── Animation ────────────────────────────────────────────────────────────────
+// Shared ease curve: smooth out with a fast-out, slow-in feel.
+// Import this instead of redefining [0.16, 1, 0.3, 1] in every component.
+
+export const EASE_CURVE = [0.16, 1, 0.3, 1] as const
+
 // ─── Navigation Items ─────────────────────────────────────────────────────────
 
 export const NAV_ITEMS: NavItem[] = [

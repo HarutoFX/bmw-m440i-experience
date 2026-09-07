@@ -3,14 +3,14 @@
 /* ─── Design Tokens ─────────────────────────────────────────────────────────── */
 
 :root {
-  /* BMW Brand Colors (Red Theme) */
-  --color-bmw-red: #D71920;
-  --color-bmw-red-light: #F02A32;
-  --color-bmw-red-dark: #7A1016;
+  /* BMW Brand Colors (Cyan/Blue Theme) */
+  --color-bmw-red: #0ea5e9;
+  --color-bmw-red-light: #38bdf8;
+  --color-bmw-red-dark: #0369a1;
 
   /* M Sport Accent */
-  --color-m-red: #cc0000;
-  --color-m-blue: #0653b6;
+  --color-m-red: #0ea5e9;
+  --color-m-blue: #0284c7;
 
   /* Surface Colors */
   --color-surface-base: #050505;
@@ -19,8 +19,8 @@
   --color-border: rgba(255, 255, 255, 0.08);
 
   /* Typography */
-  --font-sans: var(--font-geist-sans), system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), "Courier New", monospace;
+  --font-sans: var(--font-outfit), system-ui, sans-serif;
+  --font-mono: var(--font-roboto-mono), "Courier New", monospace;
 }
 
 /* ─── Base Reset ─────────────────────────────────────────────────────────────── */
@@ -43,6 +43,8 @@ body {
   background-color: var(--color-surface-base);
   color: white;
   overflow-x: hidden;
+  /* Prevent layout shift when scrollbar appears / disappears */
+  scrollbar-gutter: stable;
 }
 
 /* ─── Scrollbar Styling ──────────────────────────────────────────────────────── */

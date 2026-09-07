@@ -23,13 +23,11 @@ export default function SpecsBar() {
         ease,
       }}
       className="
-        absolute bottom-0 left-0 right-0 z-20
-        border-t border-white/10
-        bg-black/40
-        backdrop-blur-xl
+        absolute bottom-8 left-0 right-0 z-20
+        pointer-events-auto
       "
     >
-      <div className="mx-auto max-w-7xl px-4 py-4 sm:px-8">
+      <div className="mx-auto max-w-7xl px-4 sm:px-8">
         <div className="
           flex items-center
           overflow-x-auto
@@ -50,7 +48,7 @@ export default function SpecsBar() {
                   text-[10px]
                   uppercase
                   tracking-[0.15em]
-                  text-white/40
+                  text-white/80
                 ">
                   {spec.label}
                 </span>
@@ -58,17 +56,17 @@ export default function SpecsBar() {
                 <div className="mt-1 flex items-baseline gap-1">
                   <span
                     className={cn(
-                      'font-bold leading-none',
+                      'font-extralight tracking-widest leading-none',
                       spec.label.toLowerCase() === 'engine'
-                        ? 'text-base text-white'
-                        : 'text-xl text-[#D71920]'
+                        ? 'text-sm text-[#ef4444]'
+                        : 'text-2xl text-[#ef4444]'
                     )}
                   >
                     {spec.value}
                   </span>
 
                   {spec.unit && (
-                    <span className="text-xs text-white/50">
+                    <span className="text-xs text-white/80">
                       {spec.unit}
                     </span>
                   )}

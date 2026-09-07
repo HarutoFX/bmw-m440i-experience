@@ -124,3 +124,27 @@ export function normalize(
 
   return (value - min) / (max - min)
 }
+
+/**
+ * Smoothly scroll the page to a section by its anchor ID or href.
+ *
+ * Accepts either a raw id ('performance') or an href string ('#performance').
+ * Passing 'overview' or '#overview' scrolls back to the very top.
+ *
+ * @example
+ * scrollToSection('#configure')
+ * scrollToSection('overview')
+ */
+export function scrollToSection(idOrHref: string): void {
+  const id = idOrHref.replace(/^.*#/, '')
+
+  if (id === 'overview' || id === '') {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+    return
+  }
+
+  document.getElementById(id)?.scrollIntoView({
+    behavior: 'smooth',
+    block: 'start',
+  })
+}

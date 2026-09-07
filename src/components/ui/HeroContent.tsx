@@ -2,47 +2,47 @@
 
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
+import { EASE_CURVE } from '@/lib/constants'
 
-const ease = [0.16, 1, 0.3, 1] as const
+// ─── Animation variants ───────────────────────────────────────────────────────
+// Defined at module scope so they are never re-created on re-render.
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.15,
+      delayChildren: 0.35,
+    },
+  },
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.9,
+      ease: EASE_CURVE,
+    },
+  },
+}
+
+// ─── Scroll helper ────────────────────────────────────────────────────────────
+// No closure dependencies — safe to hoist to module scope.
+
+function scrollToPerformance() {
+  document.getElementById('performance')?.scrollIntoView({
+    behavior: 'smooth',
+    block: 'start',
+  })
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export default function HeroContent() {
-  const containerVariants = {
-    hidden: {
-      opacity: 0,
-    },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.15,
-        delayChildren: 0.35,
-      },
-    },
-  }
-
-  const itemVariants = {
-    hidden: {
-      opacity: 0,
-      y: 30,
-    },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.9,
-        ease,
-      },
-    },
-  }
-
-  const scrollToPerformance = () => {
-    document
-      .getElementById('performance')
-      ?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
-      })
-  }
-
   return (
     <motion.div
       variants={containerVariants}
@@ -63,14 +63,13 @@ export default function HeroContent() {
           className={cn(
             'mb-6 inline-flex items-center gap-2',
             'rounded-full px-4 py-1.5',
-            'border border-[#D71920]/30',
-            'bg-[#D71920]/20',
+            'border border-[#0ea5e9]/30',
+            'bg-[#0ea5e9]/20',
             'text-xs font-medium tracking-[0.2em]',
-            'uppercase text-[#F02A32]',
-            'backdrop-blur-sm'
+            'uppercase text-[#38bdf8]'
           )}
         >
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#D71920]" />
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#0ea5e9]" />
 
           2024 M440i xDrive Gran Coupé
         </span>
@@ -91,20 +90,10 @@ export default function HeroContent() {
           lg:text-8xl
         "
       >
-        <span className="block">
-          The Art
-        </span>
+        <span className="block">The Art</span>
 
-        <span className="
-          block
-          bg-gradient-to-r
-          from-white
-          via-white
-          to-white/30
-          bg-clip-text
-          text-transparent
-        ">
-          of Performance
+        <span className="block text-white">
+          <span className="text-[#0ea5e9]">of</span> Performance
         </span>
       </motion.h1>
 
@@ -134,23 +123,21 @@ export default function HeroContent() {
           onClick={scrollToPerformance}
           whileHover={{
             scale: 1.02,
-            boxShadow: '0 0 30px rgba(215,25,32,0.5)',
+            boxShadow: '0 0 30px rgba(14,165,233,0.5)',
           }}
-          whileTap={{
-            scale: 0.97,
-          }}
+          whileTap={{ scale: 0.97 }}
           className={cn(
             'inline-flex items-center justify-center',
             'w-full cursor-pointer',
             'rounded-xl px-8 py-3.5',
-            'bg-[#D71920]',
+            'bg-[#0ea5e9]',
             'text-sm font-semibold tracking-wide text-white',
-            'shadow-[0_0_20px_rgba(215,25,32,0.35)]',
+            'shadow-[0_0_20px_rgba(14,165,233,0.35)]',
             'transition-all duration-300',
-            'hover:bg-[#F02A32]',
+            'hover:bg-[#38bdf8]',
             'focus-visible:outline-none',
             'focus-visible:ring-2',
-            'focus-visible:ring-[#D71920]',
+            'focus-visible:ring-[#0ea5e9]',
             'focus-visible:ring-offset-2',
             'focus-visible:ring-offset-black',
             'sm:w-auto'
@@ -164,11 +151,10 @@ export default function HeroContent() {
       <motion.div
         variants={itemVariants}
         className="mt-12 flex items-center gap-3 text-white/30"
+        aria-hidden="true"
       >
         <motion.div
-          animate={{
-            y: [0, 6, 0],
-          }}
+          animate={{ y: [0, 6, 0] }}
           transition={{
             duration: 1.5,
             repeat: Infinity,

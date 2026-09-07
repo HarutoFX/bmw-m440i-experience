@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useRef } from 'react'
+import { useRef } from 'react'
 import {
   motion,
   useScroll,
@@ -8,22 +8,18 @@ import {
   type Variants,
 } from 'framer-motion'
 import Image from 'next/image'
-import { NAV_ITEMS } from '@/lib/constants'
+import { NAV_ITEMS, EASE_CURVE } from '@/lib/constants'
+import { scrollToSection } from '@/lib/utils'
 
-const ease = [0.16, 1, 0.3, 1] as const
+// ─── Animation variants ───────────────────────────────────────────────────────
+// Hoisted to module scope — no closure dependencies.
 
 const textVariants: Variants = {
-  hidden: {
-    opacity: 0,
-    y: 30,
-  },
+  hidden: { opacity: 0, y: 30 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: {
-      duration: 0.8,
-      ease,
-    },
+    transition: { duration: 0.8, ease: EASE_CURVE },
   },
 }
 
@@ -37,6 +33,8 @@ const containerVariants: Variants = {
   },
 }
 
+// ─── Main component ───────────────────────────────────────────────────────────
+
 export default function FinalCtaSection() {
   const containerRef = useRef<HTMLElement | null>(null)
 
@@ -45,45 +43,8 @@ export default function FinalCtaSection() {
     offset: ['start end', 'end start'],
   })
 
-  const imageScale = useTransform(
-    scrollYProgress,
-    [0, 1],
-    [1, 1.08]
-  )
-
-  const imageY = useTransform(
-    scrollYProgress,
-    [0, 1],
-    ['-5%', '5%']
-  )
-
-  const scrollToSection = (id: string) => {
-    const elementId = id.replace('#', '')
-
-    if (elementId === 'overview') {
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth',
-      })
-
-      return
-    }
-
-    const element = document.getElementById(elementId)
-
-    if (!element) return
-
-    element.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start',
-    })
-
-    if (elementId === 'configure') {
-      window.dispatchEvent(
-        new CustomEvent('highlight-configure')
-      )
-    }
-  }
+  const imageScale = useTransform(scrollYProgress, [0, 1], [1, 1.08])
+  const imageY = useTransform(scrollYProgress, [0, 1], ['-5%', '5%'])
 
   return (
     <section
@@ -92,7 +53,8 @@ export default function FinalCtaSection() {
       className="
         relative flex min-h-screen w-full
         flex-col
-        bg-[#050505]
+        bg-transparent
+        pointer-events-none
       "
     >
       {/* CTA */}
@@ -101,74 +63,8 @@ export default function FinalCtaSection() {
         min-h-screen flex-grow
         w-full items-center justify-center
         overflow-hidden
+        pointer-events-auto
       ">
-        {/* Background */}
-        <motion.div
-          className="
-            absolute inset-0 z-0
-            h-[115%] w-full
-            origin-bottom
-          "
-          style={{
-            scale: imageScale,
-            y: imageY,
-          }}
-          initial={{
-            opacity: 0,
-          }}
-          whileInView={{
-            opacity: 1,
-          }}
-          viewport={{
-            once: true,
-            amount: 0.2,
-          }}
-          transition={{
-            duration: 1.4,
-            ease,
-          }}
-        >
-          <Image
-            src="/images/m440i_cta_bg.jpg"
-            alt="BMW M440i Cinematic Final View"
-            fill
-            quality={100}
-            sizes="100vw"
-            className="object-cover object-center"
-          />
-        </motion.div>
-
-        {/* Overlays */}
-        <div className="
-          pointer-events-none
-          absolute inset-0 z-10
-          bg-gradient-to-t
-          from-[#050505]
-          via-[#050505]/40
-          to-transparent
-        " />
-
-        <div className="
-          pointer-events-none
-          absolute inset-0 z-10
-          bg-gradient-to-b
-          from-[#050505]
-          via-transparent
-          to-transparent
-          opacity-80
-        " />
-
-        {/* Red glow */}
-        <div className="
-          pointer-events-none
-          absolute bottom-0 left-1/2 z-10
-          h-[400px] w-[800px]
-          -translate-x-1/2 translate-y-1/2
-          rounded-full
-          bg-[#D71920]/10
-          blur-[100px]
-        " />
-
         {/* Content */}
         <motion.div
           className="
@@ -182,28 +78,25 @@ export default function FinalCtaSection() {
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
-          viewport={{
-            once: true,
-            amount: 0.3,
-          }}
+          viewport={{ once: true, amount: 0.3 }}
         >
           {/* Eyebrow */}
           <motion.div
             variants={textVariants}
-            className="mb-6 flex flex-col items-center"
+            className="mb-8 flex flex-col items-center"
           >
             <div className="
-              mb-4 h-12 w-px
+              mb-6 h-16 w-[1px]
               bg-gradient-to-b
               from-transparent
-              to-[#D71920]
+              to-white/40
             " />
 
             <span className="
-              text-xs font-semibold
+              text-[9px] font-medium
               uppercase
-              tracking-[0.3em]
-              text-[#D71920]
+              tracking-[0.4em]
+              text-white/60
             ">
               The Conclusion
             </span>
@@ -213,10 +106,10 @@ export default function FinalCtaSection() {
           <motion.h2
             variants={textVariants}
             className="
-              mb-6 max-w-4xl
-              text-4xl font-bold
+              mb-8 max-w-4xl
+              text-4xl font-extralight
               uppercase
-              tracking-tighter
+              tracking-widest
               text-white
               sm:text-5xl
               md:text-6xl
@@ -229,9 +122,10 @@ export default function FinalCtaSection() {
             <span className="
               bg-gradient-to-r
               from-white
-              to-white/60
+              to-white/40
               bg-clip-text
               text-transparent
+              font-thin
             ">
               {' '}Driving Experience.
             </span>
@@ -241,12 +135,12 @@ export default function FinalCtaSection() {
           <motion.p
             variants={textVariants}
             className="
-              mb-12 max-w-2xl
-              text-sm font-medium
+              mb-16 max-w-2xl
+              text-[10px] font-thin
               uppercase
-              tracking-wide
-              text-neutral-300
-              md:text-base
+              tracking-[0.3em]
+              text-white/50
+              md:text-xs
             "
           >
             Precision engineered. Digitally connected. Unmistakably M.
@@ -266,58 +160,33 @@ export default function FinalCtaSection() {
           >
             <motion.button
               type="button"
-              onClick={() =>
-                scrollToSection('#configure')
-              }
-              whileHover={{
-                scale: 1.02,
-                boxShadow:
-                  '0 0 30px rgba(215,25,32,0.5)',
-              }}
-              whileTap={{
-                scale: 0.97,
-              }}
+              onClick={() => scrollToSection('#configure')}
+              whileHover={{ scale: 1.02, boxShadow: '0 0 30px rgba(255,255,255,0.2)' }}
+              whileTap={{ scale: 0.97 }}
               className="
                 group relative
                 flex w-full
                 justify-center
                 overflow-hidden
-                rounded-xl
-                bg-[#D71920]
-                px-8 py-3.5
-                text-sm font-semibold
-                tracking-wider text-white
-                transition-all duration-300
-                hover:bg-[#F02A32]
+                rounded-full
+                bg-white
+                px-10 py-5
+                text-[10px] font-medium
+                uppercase tracking-[0.3em] text-black
+                transition-all duration-500
+                hover:bg-white/90
                 focus-visible:outline-none
                 focus-visible:ring-2
-                focus-visible:ring-[#D71920]
+                focus-visible:ring-white
                 focus-visible:ring-offset-2
                 focus-visible:ring-offset-[#050505]
                 sm:w-auto
               "
             >
-              <div className="
-                absolute inset-0
-                -translate-x-[150%]
-                bg-gradient-to-r
-                from-transparent
-                via-white/20
-                to-transparent
-                transition-transform duration-1000
-                group-hover:translate-x-[150%]
-              " />
-
-              <span className="
-                relative z-10
-                flex items-center gap-2
-              ">
+              <span className="relative z-10 flex items-center gap-4">
                 BUILD YOUR M440i
 
-                <span className="
-                  transition-transform duration-300
-                  group-hover:translate-x-1
-                ">
+                <span className="text-base transition-transform duration-500 group-hover:translate-x-1">
                   →
                 </span>
               </span>
@@ -325,48 +194,35 @@ export default function FinalCtaSection() {
 
             <motion.button
               type="button"
-              onClick={() =>
-                scrollToSection('#overview')
-              }
-              whileHover={{
-                scale: 1.02,
-              }}
-              whileTap={{
-                scale: 0.97,
-              }}
+              onClick={() => scrollToSection('#overview')}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
               className="
                 group relative
                 flex w-full
                 justify-center
                 overflow-hidden
-                rounded-xl
+                rounded-full
                 border border-white/20
-                bg-black/40
-                px-8 py-3.5
-                text-sm font-semibold
-                tracking-wider text-white
-                backdrop-blur-md
-                transition-all duration-300
-                hover:border-white/50
+                bg-white/[0.03]
+                px-10 py-5
+                text-[10px] font-medium
+                uppercase tracking-[0.3em] text-white
+                transition-all duration-500
+                hover:border-white/40
                 hover:bg-white/10
                 focus-visible:outline-none
                 focus-visible:ring-2
-                focus-visible:ring-[#D71920]
+                focus-visible:ring-white/50
                 focus-visible:ring-offset-2
                 focus-visible:ring-offset-[#050505]
                 sm:w-auto
               "
             >
-              <span className="
-                relative z-10
-                flex items-center gap-2
-              ">
+              <span className="relative z-10 flex items-center gap-3">
                 RETURN TO THE DRIVE
 
-                <span className="
-                  transition-transform duration-300
-                  group-hover:-translate-y-1
-                ">
+                <span className="text-base transition-transform duration-500 group-hover:-translate-y-1">
                   ↑
                 </span>
               </span>
@@ -382,6 +238,7 @@ export default function FinalCtaSection() {
         bg-[#050505]
         px-8 py-12
         md:px-16
+        pointer-events-auto
       ">
         <div className="
           mx-auto flex
@@ -390,52 +247,34 @@ export default function FinalCtaSection() {
           justify-between gap-8
           md:flex-row md:items-start
         ">
-          <div className="
-            flex flex-col
-            items-center
-            md:items-start
-          ">
-            <h3 className="
-              text-xl font-bold
-              tracking-widest
-              text-white
-            ">
+          <div className="flex flex-col items-center md:items-start">
+            <h3 className="text-xl font-extralight tracking-widest text-white">
               BMW M440i
             </h3>
 
-            <p className="
-              mt-2
-              text-xs uppercase
-              tracking-widest
-              text-neutral-500
-            ">
+            <p className="mt-2 text-[10px] font-medium uppercase tracking-[0.3em] text-white/40">
               Experience
             </p>
           </div>
 
-          <nav className="
-            flex flex-wrap
-            justify-center
-            gap-x-8 gap-y-4
-          ">
+          <nav className="flex flex-wrap justify-center gap-x-8 gap-y-4">
             {NAV_ITEMS.map((item) => (
               <button
                 key={item.label}
                 type="button"
-                onClick={() =>
-                  scrollToSection(item.href)
-                }
+                onClick={() => scrollToSection(item.href)}
                 className="
-                  rounded-sm
-                  text-xs font-semibold
+                  rounded-full px-4 py-2
+                  text-[10px] font-light
                   uppercase
-                  tracking-widest
-                  text-neutral-400
+                  tracking-[0.2em]
+                  text-white/40
                   transition-colors
                   hover:text-white
+                  hover:bg-white/5
                   focus-visible:outline-none
-                  focus-visible:ring-2
-                  focus-visible:ring-[#D71920]
+                  focus-visible:ring-1
+                  focus-visible:ring-white/20
                 "
               >
                 {item.label}
@@ -454,24 +293,12 @@ export default function FinalCtaSection() {
           md:justify-between
           md:text-left
         ">
-          <p className="
-            text-[10px]
-            uppercase
-            tracking-widest
-            text-neutral-600
-          ">
+          <p className="text-[10px] uppercase tracking-widest text-neutral-600">
             © {new Date().getFullYear()} BMW M440i Virtual
             Experience. Built for demonstration purposes.
           </p>
 
-          <p className="
-            mt-4
-            text-[10px]
-            uppercase
-            tracking-widest
-            text-neutral-600
-            md:mt-0
-          ">
+          <p className="mt-4 text-[10px] uppercase tracking-widest text-neutral-600 md:mt-0">
             Unmistakably M.
           </p>
         </div>

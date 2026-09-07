@@ -17,8 +17,11 @@ export function useScrollProgress() {
 
   useEffect(() => {
     let ticking = false
+    let isActive = true
 
     const updateScrollProgress = () => {
+      if (!isActive) return
+
       const y = window.scrollY
 
       const documentHeight = document.documentElement.scrollHeight
@@ -38,23 +41,29 @@ export function useScrollProgress() {
       }
     }
 
+    // Also throttle the resize handler with rAF to avoid forced reflows
+    // on every resize event (previously it ran synchronously).
+    const handleResize = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(updateScrollProgress)
+        ticking = true
+      }
+    }
+
     // Set the correct value immediately on mount
     updateScrollProgress()
 
-    window.addEventListener('scroll', handleScroll, {
-      passive: true,
-    })
-
-    window.addEventListener('resize', handleScroll)
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    window.addEventListener('resize', handleResize, { passive: true })
 
     return () => {
+      // Mark as inactive so any in-flight rAF callback is a no-op
+      isActive = false
+
       window.removeEventListener('scroll', handleScroll)
-      window.removeEventListener('resize', handleScroll)
+      window.removeEventListener('resize', handleResize)
     }
   }, [])
 
-  return {
-    scrollY,
-    scrollProgress,
-  }
+  return { scrollY, scrollProgress }
 }

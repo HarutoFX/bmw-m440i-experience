@@ -1,12 +1,25 @@
 'use client'
 
-import { motion, type Variants } from 'framer-motion'
+import { useRef } from 'react'
+import {
+  motion,
+  useScroll,
+  useTransform,
+  type Variants,
+} from 'framer-motion'
 import Image from 'next/image'
-import { useScrollProgress } from '@/hooks/useScrollProgress'
+import { EASE_CURVE } from '@/lib/constants'
 
-const ease = [0.16, 1, 0.3, 1] as const
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-const features = [
+interface TechFeature {
+  title: string
+  description: string
+}
+
+// ─── Data ─────────────────────────────────────────────────────────────────────
+
+const features: TechFeature[] = [
   {
     title: 'BMW Curved Display',
     description:
@@ -24,50 +37,55 @@ const features = [
   },
 ]
 
+// ─── Animation variants ───────────────────────────────────────────────────────
+// Hoisted to module scope — no closure dependencies.
+
+const containerVariants: Variants = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.15,
+      delayChildren: 0.15,
+    },
+  },
+}
+
+const featureVariants: Variants = {
+  hidden: { opacity: 0, y: 24 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.8, ease: EASE_CURVE },
+  },
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
+
 export default function TechnologySection() {
-  const { scrollProgress } = useScrollProgress()
+  const sectionRef = useRef<HTMLElement | null>(null)
 
-  const imageParallax = Math.max(
-    -5,
-    Math.min(5, (scrollProgress - 0.5) * 10)
-  )
+  // Use useScroll + useTransform for scroll-driven parallax —
+  // consistent with DesignSection, ConfigureSection, and FinalCtaSection,
+  // and avoids the React state update cycle on every scroll tick.
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start end', 'end start'],
+  })
 
-  const containerVariants: Variants = {
-    hidden: {},
-    visible: {
-      transition: {
-        staggerChildren: 0.15,
-        delayChildren: 0.15,
-      },
-    },
-  }
-
-  const featureVariants: Variants = {
-    hidden: {
-      opacity: 0,
-      y: 24,
-    },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.8,
-        ease,
-      },
-    },
-  }
+  const imageY = useTransform(scrollYProgress, [0, 1], ['-5%', '5%'])
 
   return (
     <section
       id="technology"
-      className="relative min-h-screen w-full overflow-hidden border-t border-white/5 bg-[#050505]"
+      ref={sectionRef}
+      className="relative min-h-screen w-full overflow-hidden bg-transparent pointer-events-none"
     >
       {/* Ambient glow */}
       <div
         className="pointer-events-none absolute left-0 top-1/2 h-[800px] w-[800px] -translate-x-1/4 -translate-y-1/2 rounded-full"
         style={{
           background:
-            'radial-gradient(circle, rgba(215,25,32,0.12) 0%, rgba(215,25,32,0.04) 35%, transparent 70%)',
+            'radial-gradient(circle, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 35%, transparent 70%)',
         }}
       />
 
@@ -81,11 +99,11 @@ export default function TechnologySection() {
         }}
       />
 
-      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1600px] flex-col lg:flex-row">
+      <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1600px] flex-col pointer-events-auto lg:flex-row">
         {/* Content */}
-        <div className="flex w-full items-center px-6 py-24 sm:px-10 md:px-16 lg:w-1/2 lg:px-20 xl:px-28">
+        <div className="flex w-full items-center px-8 py-20 mx-4 sm:px-10 md:px-16 lg:w-[42%] lg:py-0 lg:px-14 lg:ml-16">
           <motion.div
-            className="max-w-xl"
+            className="max-w-xl bg-black/60 border border-white/10 rounded-3xl shadow-2xl p-10 lg:p-14"
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.2 }}
@@ -94,22 +112,20 @@ export default function TechnologySection() {
             {/* Section marker */}
             <motion.div
               variants={featureVariants}
-              className="mb-7 flex items-center gap-3"
+              className="mb-8 flex items-center gap-4"
             >
-              <span className="h-px w-8 bg-[#D71920]" />
-
-              <span className="text-xs font-semibold uppercase tracking-[0.3em] text-[#D71920]">
+              <span className="h-px w-10 bg-white/20" />
+              <span className="text-[9px] font-medium uppercase tracking-[0.4em] text-white/60">
                 Digital Innovation
               </span>
             </motion.div>
 
             {/* Heading */}
             <motion.div variants={featureVariants}>
-              <h2 className="mb-10 text-5xl font-bold uppercase leading-[0.95] tracking-tighter text-white sm:text-6xl lg:text-6xl xl:text-7xl">
+              <h2 className="mb-12 text-4xl font-extralight uppercase leading-tight tracking-widest text-white sm:text-5xl lg:text-5xl xl:text-6xl">
                 Intuitive.
                 <br />
-
-                <span className="bg-gradient-to-r from-white to-white/40 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-white to-white/40 bg-clip-text text-transparent font-thin">
                   Immersive.
                 </span>
               </h2>
@@ -117,7 +133,7 @@ export default function TechnologySection() {
 
             {/* Features */}
             <motion.div
-              className="space-y-8 lg:space-y-10"
+              className="space-y-10 lg:space-y-12"
               variants={containerVariants}
             >
               {features.map((feature) => (
@@ -126,16 +142,16 @@ export default function TechnologySection() {
                   variants={featureVariants}
                   className="group flex gap-5"
                 >
-                  <div className="relative mt-1 flex h-7 w-[2px] shrink-0 overflow-hidden">
-                    <span className="h-full w-full bg-[#D71920] opacity-70 transition-all duration-300 group-hover:opacity-100 group-hover:shadow-[0_0_10px_rgba(215,25,32,0.8)]" />
+                  <div className="relative mt-1 flex h-6 w-[1px] shrink-0 overflow-hidden">
+                    <span className="h-full w-full bg-white/30 transition-all duration-500 group-hover:bg-white/80 group-hover:shadow-[0_0_12px_rgba(255,255,255,0.3)]" />
                   </div>
 
                   <div>
-                    <h3 className="mb-2 text-sm font-semibold uppercase tracking-[0.12em] text-white/85 transition-colors duration-300 group-hover:text-white">
+                    <h3 className="mb-2 text-xs font-light uppercase tracking-widest text-[#ef4444] transition-colors duration-500 group-hover:text-[#f87171]">
                       {feature.title}
                     </h3>
 
-                    <p className="max-w-md text-sm leading-relaxed text-white/45 transition-colors duration-300 group-hover:text-white/60">
+                    <p className="max-w-md text-[10px] font-thin uppercase tracking-[0.2em] leading-relaxed text-white/70 transition-colors duration-500 group-hover:text-white/90">
                       {feature.description}
                     </p>
                   </div>
@@ -145,38 +161,8 @@ export default function TechnologySection() {
           </motion.div>
         </div>
 
-        {/* Image */}
-        <div className="relative h-[55vh] w-full overflow-hidden lg:h-auto lg:min-h-screen lg:w-1/2">
-          <motion.div
-            className="absolute -inset-[5%]"
-            style={{
-              y: `${imageParallax}%`,
-            }}
-            initial={{ opacity: 0, scale: 1.04 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true, amount: 0.2 }}
-            transition={{
-              duration: 1.4,
-              ease,
-            }}
-          >
-            <Image
-              src="/images/bmw_interior.png"
-              alt="BMW M440i interior with curved display"
-              fill
-              quality={100}
-              sizes="(max-width: 1024px) 100vw, 50vw"
-              className="object-cover object-center lg:object-[45%_center]"
-            />
-
-            {/* Desktop fade */}
-            <div className="absolute inset-0 hidden bg-gradient-to-r from-[#050505] via-[#050505]/25 to-transparent lg:block" />
-
-            {/* Mobile fades */}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent lg:hidden" />
-            <div className="absolute inset-0 bg-gradient-to-b from-[#050505] via-transparent to-transparent lg:hidden" />
-          </motion.div>
-        </div>
+        {/* Spacer for 3D car to be visible on the right */}
+        <div className="hidden lg:block lg:w-1/2 lg:min-h-screen" />
       </div>
     </section>
   )

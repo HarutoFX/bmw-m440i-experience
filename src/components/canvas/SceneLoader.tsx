@@ -13,8 +13,8 @@ export default function SceneLoader() {
           {/* Outer subtle ring */}
           <div className="absolute inset-0 rounded-full border-2 border-white/10" />
 
-          {/* Animated BMW M red ring */}
-          <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-[#D71920] animate-spin" />
+          {/* Animated BMW M cyan ring */}
+          <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-[#0ea5e9] animate-spin" />
         </div>
 
         <div className="flex flex-col items-center gap-1">
