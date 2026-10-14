@@ -24,7 +24,7 @@ export const useConfiguratorStore = create<ConfiguratorState>((set) => ({
   selectedInterior: 'black',
   activeConfigStep: 'none',
   activeHotspot: null,
-  selectedEnvironment: 'studio',
+  selectedEnvironment: 'sunset',
   lastInteractionTime: 0,
   setColor: (color) => set({ selectedColor: color, lastInteractionTime: Date.now() }),
   setInterior: (interior) => set({ selectedInterior: interior, lastInteractionTime: Date.now() }),

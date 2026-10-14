@@ -3,12 +3,10 @@
 import { useRef } from 'react'
 import {
   motion,
-  useScroll,
-  useTransform,
   type Variants,
 } from 'framer-motion'
-import Image from 'next/image'
 import { EASE_CURVE } from '@/lib/constants'
+import TiltCard from './TiltCard'
 
 // ─── Animation variants ───────────────────────────────────────────────────────
 // Hoisted to module scope — no closure dependencies.
@@ -30,13 +28,6 @@ const featureVariants: Variants = {
     y: 0,
     transition: { duration: 0.7, ease: EASE_CURVE },
   },
-}
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-interface DesignFeature {
-  title: string
-  children: React.ReactNode
 }
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
@@ -126,12 +117,7 @@ function Feature({
 export default function DesignSection() {
   const containerRef = useRef<HTMLElement | null>(null)
 
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ['start end', 'end start'],
-  })
 
-  const imageY = useTransform(scrollYProgress, [0, 1], ['-4%', '4%'])
 
   return (
     <section
@@ -158,17 +144,15 @@ export default function DesignSection() {
         transition={{ duration: 0.8 }}
       >
         {/* Content */}
-        <div
+        <TiltCard
+          maxTilt={8}
+          perspective={1200}
           className="
             order-1 z-20
-            flex w-full flex-col justify-center
-            px-8 py-12 mx-4
-            md:px-16
-            lg:order-1 lg:w-[42%]
-            lg:w-[42%] lg:py-16 lg:px-14 lg:ml-16
-            bg-black/60 border border-white/10
-            rounded-3xl shadow-2xl
+            w-full mx-4
+            lg:order-1 lg:w-[42%] lg:ml-16
           "
+          cardClassName="flex w-full flex-col justify-center px-8 py-12 md:px-16 lg:py-16 lg:px-14"
         >
           {/* Section marker */}
           <div className="mb-8 flex items-center gap-4">
@@ -223,7 +207,7 @@ export default function DesignSection() {
               calipers and reinforce the vehicle&apos;s athletic stance.
             </Feature>
           </motion.div>
-        </div>
+        </TiltCard>
 
         {/* Spacer for 3D car to be visible on the right */}
         <div className="hidden lg:block lg:w-[55%]" />

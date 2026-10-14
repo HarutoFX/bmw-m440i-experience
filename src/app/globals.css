@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
+  --font-heading: var(--font-pacifico), cursive;
+  --font-script: var(--font-pacifico), cursive;
+}
+
 /* ─── Design Tokens ─────────────────────────────────────────────────────────── */
 
 :root {
@@ -19,7 +25,9 @@
   --color-border: rgba(255, 255, 255, 0.08);
 
   /* Typography */
-  --font-sans: var(--font-outfit), system-ui, sans-serif;
+  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
+  --font-heading: var(--font-pacifico), cursive;
+  --font-script: var(--font-pacifico), cursive;
   --font-mono: var(--font-roboto-mono), "Courier New", monospace;
 }
 
@@ -96,4 +104,13 @@ canvas {
   outline: 2px solid var(--color-bmw-red);
   outline-offset: 2px;
   border-radius: 4px;
+}
+
+/* ─── Cursor Behavior ───────────────────────────────────────────────────────── */
+
+input,
+textarea,
+select,
+[contenteditable="true"] {
+  cursor: text !important;
 }

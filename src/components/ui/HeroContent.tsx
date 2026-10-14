@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { EASE_CURVE } from '@/lib/constants'
+import SplitText from './SplitText'
 
 // ─── Animation variants ───────────────────────────────────────────────────────
 // Defined at module scope so they are never re-created on re-render.
@@ -50,7 +51,7 @@ export default function HeroContent() {
       animate="visible"
       className="
         relative z-10
-        flex h-full max-w-3xl flex-col
+        flex h-full max-w-4xl lg:max-w-5xl flex-col
         items-start justify-end
         px-6 pb-32
         md:px-16 md:pb-24
@@ -77,23 +78,64 @@ export default function HeroContent() {
 
       {/* Headline */}
       <motion.h1
-        variants={itemVariants}
+        variants={{
+          hidden: { opacity: 1 },
+          visible: { opacity: 1 },
+        }}
         className="
           mb-6
-          text-[2.75rem]
-          font-bold
-          leading-[0.95]
-          tracking-tight
-          text-white
-          sm:text-5xl
-          md:text-7xl
-          lg:text-8xl
+          font-normal
+          tracking-normal
+          leading-[1.12]
+          text-[clamp(2.75rem,6vw,5.25rem)]
+          text-[#FF263D]
+          select-none
         "
+        style={{
+          fontFamily: 'var(--font-pacifico), cursive, sans-serif',
+          color: '#FF263D',
+          letterSpacing: 'normal',
+        }}
+        aria-label="The Art of Performance"
       >
-        <span className="block">The Art</span>
+        {/* Segment 1: The Art (BMW Red #FF263D) */}
+        <span
+          className="block whitespace-nowrap text-[#FF263D]"
+          style={{ color: '#FF263D' }}
+        >
+          <SplitText
+            text="The Art"
+            baseDelay={0.2}
+            charDelay={0.08}
+          />
+        </span>
 
-        <span className="block text-white">
-          <span className="text-[#0ea5e9]">of</span> Performance
+        {/* Responsive Line Container for 'of' and 'Performance' */}
+        <span className="block text-[#FF263D]" style={{ color: '#FF263D' }}>
+          {/* Segment 2: 'of' (BMW Red #FF263D) */}
+          <span
+            className="inline-block text-[#FF263D] mr-3 sm:mr-4 md:mr-0 md:block whitespace-nowrap"
+            style={{ color: '#FF263D' }}
+          >
+            <SplitText
+              text="of"
+              isAccent
+              baseDelay={0.9}
+              charDelay={0.09}
+            />
+          </span>
+
+          {/* Segment 3: 'Performance' (BMW Red #FF263D) */}
+          <span
+            className="inline-block md:block whitespace-nowrap text-[#FF263D]"
+            style={{ color: '#FF263D' }}
+          >
+            <SplitText
+              text="Performance"
+              baseDelay={1.3}
+              charDelay={0.075}
+            />
+          </span>
         </span>
       </motion.h1>
 

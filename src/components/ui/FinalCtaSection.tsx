@@ -1,13 +1,9 @@
 'use client'
 
-import { useRef } from 'react'
 import {
   motion,
-  useScroll,
-  useTransform,
   type Variants,
 } from 'framer-motion'
-import Image from 'next/image'
 import { NAV_ITEMS, EASE_CURVE } from '@/lib/constants'
 import { scrollToSection } from '@/lib/utils'
 
@@ -36,20 +32,9 @@ const containerVariants: Variants = {
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function FinalCtaSection() {
-  const containerRef = useRef<HTMLElement | null>(null)
-
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ['start end', 'end start'],
-  })
-
-  const imageScale = useTransform(scrollYProgress, [0, 1], [1, 1.08])
-  const imageY = useTransform(scrollYProgress, [0, 1], ['-5%', '5%'])
-
   return (
     <section
       id="cta"
-      ref={containerRef}
       className="
         relative flex min-h-screen w-full
         flex-col

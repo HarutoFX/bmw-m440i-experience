@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { CAR_SPECS } from '@/lib/constants'
+import TiltCard from './TiltCard'
 
 const ease = [0.16, 1, 0.3, 1] as const
 
@@ -27,12 +28,18 @@ export default function SpecsBar() {
         pointer-events-auto
       "
     >
-      <div className="mx-auto max-w-7xl px-4 sm:px-8">
-        <div className="
-          flex items-center
-          overflow-x-auto
-          scrollbar-none
-        ">
+      <div className="mx-auto max-w-fit px-4 sm:px-8">
+        <TiltCard
+          maxTilt={4}
+          perspective={1400}
+          className="w-fit mx-auto"
+          cardClassName="px-3 py-2 rounded-2xl"
+        >
+          <div className="
+            flex items-center
+            overflow-x-auto
+            scrollbar-none
+          ">
           {CAR_SPECS.slice(0, 5).map((spec, index) => (
             <div
               key={spec.label}
@@ -83,6 +90,7 @@ export default function SpecsBar() {
             </div>
           ))}
         </div>
+        </TiltCard>
       </div>
     </motion.div>
   )

@@ -23,8 +23,6 @@ const INTERIOR_COLORS = {
   red: '#701010',
 }
 
-
-
 type CarModelProps = {
   url?: string
   position?: [number, number, number]
@@ -37,17 +35,15 @@ export default function CarModel({
   position = [0, -1, 0],
   rotation = [0, 0, 0],
   scale = 1,
-  }: CarModelProps) {
+}: CarModelProps) {
   const groupRef = useRef<THREE.Group>(null)
-  const paintMaterialsRef = useRef<THREE.MeshStandardMaterial[]>([])
-  const interiorMaterialsRef = useRef<THREE.MeshStandardMaterial[]>([])
   
   const selectedColor = useConfiguratorStore((state) => state.selectedColor)
   const selectedInterior = useConfiguratorStore((state) => state.selectedInterior)
 
   const { scene } = useGLTF(url)
 
-  const { model, normalizedScale, offset } = useMemo(() => {
+  const { model, normalizedScale, offset, paintMaterials, interiorMaterials } = useMemo(() => {
     /**
      * Clone the hierarchy.
      *
@@ -59,6 +55,8 @@ export default function CarModel({
     const clonedScene = scene.clone(true)
 
     const box = new THREE.Box3()
+    const foundPaintMats: THREE.MeshStandardMaterial[] = []
+    const foundInteriorMats: THREE.MeshStandardMaterial[] = []
 
     clonedScene.traverse((child) => {
       if (!(child instanceof THREE.Mesh)) return
@@ -95,7 +93,7 @@ export default function CarModel({
           if ('envMapIntensity' in material) material.envMapIntensity = 1.8
 
           material.needsUpdate = true
-          paintMaterialsRef.current.push(material as THREE.MeshStandardMaterial)
+          foundPaintMats.push(material as THREE.MeshStandardMaterial)
         }
 
         /**
@@ -113,7 +111,7 @@ export default function CarModel({
           if ('metalness' in material) material.metalness = 0.0
           if ('envMapIntensity' in material) material.envMapIntensity = 0.8
           material.needsUpdate = true
-          interiorMaterialsRef.current.push(material as THREE.MeshStandardMaterial)
+          foundInteriorMats.push(material as THREE.MeshStandardMaterial)
         }
 
         /**
@@ -176,7 +174,13 @@ export default function CarModel({
       -center.z,
     ]
 
-    return { model: clonedScene, normalizedScale: baseScale, offset }
+    return {
+      model: clonedScene,
+      normalizedScale: baseScale,
+      offset,
+      paintMaterials: foundPaintMats,
+      interiorMaterials: foundInteriorMats,
+    }
   }, [scene])
 
   // React to paint color changes
@@ -185,25 +189,23 @@ export default function CarModel({
     const color = new THREE.Color(hex)
     const isMatte = selectedColor.startsWith('frozen_')
     
-    paintMaterialsRef.current.forEach((mat) => {
+    paintMaterials.forEach((mat) => {
       mat.color.set(color)
       if ('roughness' in mat) mat.roughness = isMatte ? 0.45 : 0.16
       if ('metalness' in mat) mat.metalness = isMatte ? 0.5 : 0.82
       mat.needsUpdate = true
     })
-  }, [selectedColor])
+  }, [paintMaterials, selectedColor])
 
   // React to interior color changes
   useEffect(() => {
     const hex = INTERIOR_COLORS[selectedInterior]
     const color = new THREE.Color(hex)
-    interiorMaterialsRef.current.forEach((mat) => {
+    interiorMaterials.forEach((mat) => {
       mat.color.set(color)
       mat.needsUpdate = true
     })
-  }, [selectedInterior])
-
-
+  }, [interiorMaterials, selectedInterior])
 
   /**
    * Cinematic idle animation.

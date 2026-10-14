@@ -13,8 +13,7 @@ const nextConfig: NextConfig = {
    * GLTF/GLB files will be handled as public assets via /public/models/.
    */
   experimental: {
-    // Enables the stable turbopack for faster dev builds (optional)
-    // turbo: {},
+    optimizePackageImports: ['@react-three/drei', 'framer-motion', 'three'],
   },
 
   images: {

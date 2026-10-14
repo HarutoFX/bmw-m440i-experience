@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { motion, AnimatePresence, LayoutGroup } from 'framer-motion'
+import { motion, AnimatePresence, LayoutGroup, useScroll, useMotionValueEvent } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { scrollToSection } from '@/lib/utils'
 import { NAV_ITEMS, SITE_NAME } from '@/lib/constants'
@@ -11,6 +11,27 @@ import { NAV_ITEMS, SITE_NAME } from '@/lib/constants'
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [activeSection, setActiveSection] = useState('overview')
+  const [isVisible, setIsVisible] = useState(true)
+
+  const { scrollY } = useScroll()
+
+  useMotionValueEvent(scrollY, 'change', (latest) => {
+    const previous = scrollY.getPrevious() ?? 0
+    const diff = latest - previous
+
+    // Always keep visible when near the top of the page
+    if (latest < 60) {
+      setIsVisible(true)
+      return
+    }
+
+    // Scroll down -> hide; Scroll up -> show
+    if (diff > 8 && latest > 120) {
+      setIsVisible(false)
+    } else if (diff < -8) {
+      setIsVisible(true)
+    }
+  })
 
   // Track the original scrollRestoration value in a ref so it's stable
   // across renders and doesn't trigger extra effects.
@@ -95,9 +116,15 @@ export default function Navbar() {
   return (
     <motion.nav
       initial={{ y: -80, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-      className="fixed top-0 left-0 right-0 z-50 px-4 py-3 sm:px-6 sm:py-4"
+      animate={{
+        y: isVisible || isOpen ? 0 : -100,
+        opacity: isVisible || isOpen ? 1 : 0,
+      }}
+      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+      className={cn(
+        'fixed top-0 left-0 right-0 z-50 px-4 py-3 sm:px-6 sm:py-4',
+        !isVisible && !isOpen && 'pointer-events-none'
+      )}
     >
       <div
         className={cn(

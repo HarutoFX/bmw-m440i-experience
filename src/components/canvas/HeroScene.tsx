@@ -1,11 +1,10 @@
 'use client'
 
-import { memo, Suspense, useState } from 'react'
+import { memo, Suspense, useState, useEffect } from 'react'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import {
   ContactShadows,
   Environment,
-  Html,
   MeshReflectorMaterial,
   PerformanceMonitor,
 } from '@react-three/drei'
@@ -61,12 +60,6 @@ const BackgroundSlash = memo(function BackgroundSlash() {
 // already-reactive viewport data drives the configuration.
 
 function ResponsiveCarModel() {
-  const { viewport } = useThree()
-  const width = viewport.width
-
-  // R3F viewport.width is in Three.js units; translate to approximate pixels
-  // by multiplying by the canvas pixel ratio.
-  // A simpler, reliable approach is to use the raw size from the renderer:
   const { size } = useThree()
   const pixelWidth = size.width
 
@@ -77,8 +70,6 @@ function ResponsiveCarModel() {
         ? { scale: 1.12, position: [1, -1.1, 0] as [number, number, number] }
         : { scale: 1.3, position: [1.5, -1.1, 0] as [number, number, number] }
 
-  void width // consumed above via size.width
-
   return (
     <CarModel
       position={config.position}
@@ -88,85 +79,72 @@ function ResponsiveCarModel() {
   )
 }
 
-// ModelLoader removed in favor of Preloader component
-
 // ─── Scroll-Driven Camera Controller ─────────────────────────────────────────
 
-function ScrollCameraController() {
-  const activeConfigStep = useConfiguratorStore((state) => state.activeConfigStep)
+const POS_HERO = new THREE.Vector3(6, 1, 7)
+const POS_PERFORMANCE = new THREE.Vector3(0.5, 0.4, 8.5) // Low angle, straight at the grill
+const POS_DESIGN = new THREE.Vector3(-5, 1.2, -6) // Wide rear 3/4
+const POS_TECH = new THREE.Vector3(-3, 3.5, 3) // High angle overlooking hood and interior
+const POS_CONFIG = new THREE.Vector3(5.5, 0.5, 4.5) // Front 3/4 view slightly raised
 
-  useFrame((state, delta) => {
+const TARGET_HERO = new THREE.Vector3(0, 0, 0)
+const TARGET_PERFORMANCE = new THREE.Vector3(0.5, 0, 2) // Focus on the front grille/badge
+const TARGET_DESIGN = new THREE.Vector3(0, 0, -2) // Focus on rear tail lights
+const TARGET_TECH = new THREE.Vector3(0, 0.5, 0) // Focus on cabin
+const TARGET_CONFIG = new THREE.Vector3(1.5, -0.2, 0) // Center on the car's actual position
+
+// Reusable scratch vectors to avoid per-frame GC allocations
+const tempTargetPos = new THREE.Vector3()
+const tempTargetLook = new THREE.Vector3()
+const tempOrbitPos = new THREE.Vector3()
+
+function ScrollCameraController() {
+  useFrame((state) => {
     // 1. Calculate global scroll progress (0 to 1)
     const scrollY = window.scrollY || 0
     const maxScroll = document.documentElement.scrollHeight - window.innerHeight
     const progress = maxScroll > 0 ? Math.min(Math.max(scrollY / maxScroll, 0), 1) : 0
 
-    // 2. Define cinematic keyframes for Camera Position
-    const posHero = new THREE.Vector3(6, 1, 7)
-    const posPerformance = new THREE.Vector3(0.5, 0.4, 8.5) // Low angle, straight at the grill
-    const posDesign = new THREE.Vector3(-5, 1.2, -6) // Wide rear 3/4
-    const posTech = new THREE.Vector3(-3, 3.5, 3) // High angle overlooking hood and interior
-    const posConfig = new THREE.Vector3(5.5, 0.5, 4.5) // Front 3/4 view slightly raised
-    const posFinal = new THREE.Vector3(4, 0.5, 6) 
-
-    // 3. Define cinematic keyframes for Camera Target (lookAt)
-    const targetHero = new THREE.Vector3(0, 0, 0)
-    const targetPerformance = new THREE.Vector3(0.5, 0, 2) // Focus on the front grille/badge
-    const targetDesign = new THREE.Vector3(0, 0, -2) // Focus on rear tail lights
-    const targetTech = new THREE.Vector3(0, 0.5, 0) // Focus on cabin
-    const targetConfig = new THREE.Vector3(1.5, -0.2, 0) // Center on the car's actual position
-    const targetFinal = new THREE.Vector3(1.5, -0.2, 0) // Slowly pan target
-
-    let targetPos = posHero
-    let targetLook = targetHero
-
-    // Interpolate between keyframes strictly based on scroll progress
+    // Interpolate between keyframes strictly based on scroll progress without allocating new objects
     if (progress < 0.2) {
-      // Hero to Performance
       const p = progress / 0.2
-      targetPos = posHero.clone().lerp(posPerformance, p)
-      targetLook = targetHero.clone().lerp(targetPerformance, p)
+      tempTargetPos.lerpVectors(POS_HERO, POS_PERFORMANCE, p)
+      tempTargetLook.lerpVectors(TARGET_HERO, TARGET_PERFORMANCE, p)
     } else if (progress < 0.4) {
-      // Performance to Design
       const p = (progress - 0.2) / 0.2
-      targetPos = posPerformance.clone().lerp(posDesign, p)
-      targetLook = targetPerformance.clone().lerp(targetDesign, p)
+      tempTargetPos.lerpVectors(POS_PERFORMANCE, POS_DESIGN, p)
+      tempTargetLook.lerpVectors(TARGET_PERFORMANCE, TARGET_DESIGN, p)
     } else if (progress < 0.6) {
-      // Design to Tech
       const p = (progress - 0.4) / 0.2
-      targetPos = posDesign.clone().lerp(posTech, p)
-      targetLook = targetDesign.clone().lerp(targetTech, p)
+      tempTargetPos.lerpVectors(POS_DESIGN, POS_TECH, p)
+      tempTargetLook.lerpVectors(TARGET_DESIGN, TARGET_TECH, p)
     } else if (progress < 0.8) {
-      // Tech to Config
       const p = (progress - 0.6) / 0.2
-      targetPos = posTech.clone().lerp(posConfig, p)
-      targetLook = targetTech.clone().lerp(targetConfig, p)
+      tempTargetPos.lerpVectors(POS_TECH, POS_CONFIG, p)
+      tempTargetLook.lerpVectors(TARGET_TECH, TARGET_CONFIG, p)
     } else {
-      // Config to Final (Sweeping Orbit)
       const p = Math.min((progress - 0.8) / 0.1, 1)
       const time = state.clock.elapsedTime
       const angle = -0.21 + Math.sin(time * 0.15) * 0.7
       const radius = 7.16
-      
-      const orbitPos = new THREE.Vector3(
+
+      tempOrbitPos.set(
         1.5 + Math.cos(angle) * radius,
         0.5 + Math.sin(time * 0.25) * 0.2,
         Math.sin(angle) * radius
       )
-      
-      targetPos = posConfig.clone().lerp(orbitPos, p)
-      targetLook = targetConfig.clone()
+
+      tempTargetPos.lerpVectors(POS_CONFIG, tempOrbitPos, p)
+      tempTargetLook.copy(TARGET_CONFIG)
     }
 
-    // 4. Smoothly damp the camera position and lookAt
-    state.camera.position.lerp(targetPos, 0.05)
-    
-    // We need to keep track of a smooth lookAt vector
-    // A simple way is to use a dummy object or just damp a local vector
+    // 2. Smoothly damp the camera position and lookAt
+    state.camera.position.lerp(tempTargetPos, 0.05)
+
     if (!state.camera.userData.currentLookAt) {
-      state.camera.userData.currentLookAt = targetHero.clone()
+      state.camera.userData.currentLookAt = TARGET_HERO.clone()
     }
-    state.camera.userData.currentLookAt.lerp(targetLook, 0.05)
+    state.camera.userData.currentLookAt.lerp(tempTargetLook, 0.05)
     state.camera.lookAt(state.camera.userData.currentLookAt)
   })
 
@@ -231,13 +209,13 @@ function DynamicLighting() {
         shadow-mapSize-height={2048}
         shadow-camera-near={0.5}
         shadow-camera-far={30}
-        shadow-camera-left={-8}
-        shadow-camera-right={8}
-        shadow-camera-top={7}
-        shadow-camera-bottom={-6}
+        shadow-camera-left={-12}
+        shadow-camera-right={12}
+        shadow-camera-top={10}
+        shadow-camera-bottom={-8}
         shadow-bias={-0.00035}
       />
-      <spotLight position={[0, 8, 3]} angle={0.6} penumbra={0.9} intensity={1.2} color="#e8edff" castShadow />
+      <spotLight position={[0, 8, 3]} angle={0.8} penumbra={1.0} intensity={1.2} color="#e8edff" />
       <directionalLight position={[-5, 3, 7]} color="#ffffff" intensity={0.55} />
       <directionalLight position={[-6, 4, -3]} color="#e0e7ff" intensity={1.0} />
       <directionalLight position={[-2, 2, -7]} color="#a0aec0" intensity={0.8} />
@@ -256,6 +234,34 @@ function EnvironmentController() {
   return <Environment preset={preset} environmentIntensity={intensity} />
 }
 
+function FpsLimiter({ fps = 60 }: { fps?: number }) {
+  const { invalidate } = useThree()
+
+  useEffect(() => {
+    let animId: number
+    let lastTime = performance.now()
+    const frameInterval = 1000 / fps
+
+    const tick = (now: number) => {
+      animId = requestAnimationFrame(tick)
+      const elapsed = now - lastTime
+
+      if (elapsed >= frameInterval - 1.5) {
+        lastTime = now - (elapsed % frameInterval)
+        invalidate()
+      }
+    }
+
+    animId = requestAnimationFrame(tick)
+
+    return () => {
+      cancelAnimationFrame(animId)
+    }
+  }, [fps, invalidate])
+
+  return null
+}
+
 export default function HeroScene() {
   void EASE_CURVE
   const [dpr, setDpr] = useState(1.5)
@@ -263,6 +269,7 @@ export default function HeroScene() {
   return (
     <div className="w-full h-full">
       <Canvas
+        frameloop="demand"
         camera={{
           position: [5.8, 0.8, 6.8],
           fov: 35,
@@ -277,10 +284,11 @@ export default function HeroScene() {
         shadows="percentage"
         dpr={dpr}
       >
+        <FpsLimiter fps={60} />
         <color attach="background" args={['#020202']} />
         <fog attach="fog" args={['#020202', 14, 35]} />
 
-        <PerformanceMonitor onIncline={() => setDpr(1.75)} onDecline={() => setDpr(1)} />
+        <PerformanceMonitor onIncline={() => setDpr(1.5)} onDecline={() => setDpr(1)} />
 
         <DynamicLighting />
 

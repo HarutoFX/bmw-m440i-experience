@@ -3,12 +3,10 @@
 import { useRef } from 'react'
 import {
   motion,
-  useScroll,
-  useTransform,
   type Variants,
 } from 'framer-motion'
-import Image from 'next/image'
 import { EASE_CURVE } from '@/lib/constants'
+import TiltCard from './TiltCard'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -64,15 +62,6 @@ const featureVariants: Variants = {
 export default function TechnologySection() {
   const sectionRef = useRef<HTMLElement | null>(null)
 
-  // Use useScroll + useTransform for scroll-driven parallax —
-  // consistent with DesignSection, ConfigureSection, and FinalCtaSection,
-  // and avoids the React state update cycle on every scroll tick.
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ['start end', 'end start'],
-  })
-
-  const imageY = useTransform(scrollYProgress, [0, 1], ['-5%', '5%'])
 
   return (
     <section
@@ -102,13 +91,18 @@ export default function TechnologySection() {
       <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-[1600px] flex-col pointer-events-auto lg:flex-row">
         {/* Content */}
         <div className="flex w-full items-center px-8 py-20 mx-4 sm:px-10 md:px-16 lg:w-[42%] lg:py-0 lg:px-14 lg:ml-16">
-          <motion.div
-            className="max-w-xl bg-black/60 border border-white/10 rounded-3xl shadow-2xl p-10 lg:p-14"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.2 }}
-            variants={containerVariants}
+          <TiltCard
+            maxTilt={8}
+            perspective={1200}
+            className="w-full max-w-xl"
+            cardClassName="p-10 lg:p-14"
           >
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.2 }}
+              variants={containerVariants}
+            >
             {/* Section marker */}
             <motion.div
               variants={featureVariants}
@@ -158,7 +152,8 @@ export default function TechnologySection() {
                 </motion.div>
               ))}
             </motion.div>
-          </motion.div>
+            </motion.div>
+          </TiltCard>
         </div>
 
         {/* Spacer for 3D car to be visible on the right */}

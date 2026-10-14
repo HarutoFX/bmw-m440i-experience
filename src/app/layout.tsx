@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from 'next'
-import { Outfit, Roboto_Mono } from 'next/font/google'
+import { Outfit, Roboto_Mono, Inter, Pacifico } from 'next/font/google'
 import './globals.css'
 import { SITE_NAME, SITE_DESCRIPTION, SITE_TAGLINE } from '@/lib/constants'
-import CustomCursor from '@/components/ui/CustomCursor'
+import { SmoothCursor } from "@/registry/magicui/smooth-cursor"
 import ScrollProgress from '@/components/ui/ScrollProgress'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
@@ -16,6 +16,20 @@ const outfit = Outfit({
 const robotoMono = Roboto_Mono({
   variable: '--font-roboto-mono',
   subsets: ['latin'],
+  display: 'swap',
+})
+
+const inter = Inter({
+  variable: '--font-inter',
+  subsets: ['latin'],
+  display: 'swap',
+  weight: ['400', '500', '600', '700', '800', '900'],
+})
+
+const pacifico = Pacifico({
+  variable: '--font-pacifico',
+  subsets: ['latin'],
+  weight: '400',
   display: 'swap',
 })
 
@@ -71,6 +85,17 @@ export const metadata: Metadata = {
     images: ['/images/m440i_cta_bg.jpg'],
   },
 
+  icons: {
+    icon: [
+      { url: '/bmw-logo.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: 'any' },
+    ],
+    shortcut: ['/favicon.ico'],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '192x192', type: 'image/png' },
+    ],
+  },
+
   robots: {
     index: true,
     follow: true,
@@ -81,11 +106,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${outfit.variable} ${robotoMono.variable} font-sans h-full antialiased`}
+      className={`${outfit.variable} ${robotoMono.variable} ${inter.variable} ${pacifico.variable} font-sans h-full antialiased`}
     >
       <body className="min-h-full bg-[#050505] text-white overflow-x-hidden">
         <ScrollProgress />
-        <CustomCursor />
+        <SmoothCursor />
         {children}
         <Analytics />
         <SpeedInsights />

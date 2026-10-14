@@ -4,11 +4,11 @@ import { useRef, useState } from 'react'
 import {
   AnimatePresence,
   motion,
-  useScroll,
   type Variants,
 } from 'framer-motion'
 import { EASE_CURVE } from '@/lib/constants'
-import { useConfiguratorStore, type ColorOption, type InteriorOption, type EnvironmentOption } from '@/lib/store'
+import { useConfiguratorStore, type ColorOption, type InteriorOption } from '@/lib/store'
+import TiltCard from './TiltCard'
 
 const colorMap: Record<ColorOption, { name: string; src: string; hex: string }> = {
   alpine_white: { name: 'Alpine White', src: '', hex: '#f2f2f2' },
@@ -27,11 +27,6 @@ const interiorMap: Record<InteriorOption, { name: string; fallbackColor: string 
   red: { name: 'Red / Black M Sport Interior', fallbackColor: '#641515' },
 }
 
-const environments: { id: EnvironmentOption; name: string }[] = [
-  { id: 'studio', name: 'Studio' },
-  { id: 'city', name: 'Neon City' },
-  { id: 'sunset', name: 'Sunset' },
-]
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -51,19 +46,13 @@ export default function ConfigureSection() {
   const {
     selectedColor,
     selectedInterior,
-    selectedEnvironment,
     setColor: setSelectedColor,
     setInterior: setSelectedInterior,
-    setEnvironment,
     setActiveConfigStep,
   } = useConfiguratorStore()
 
   const [buildSuccess, setBuildSuccess] = useState(false)
 
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ['start end', 'end start'],
-  })
 
   const handleBuildRequest = () => {
     setBuildSuccess(true)
@@ -94,9 +83,14 @@ export default function ConfigureSection() {
           {/* Left Side: Exterior Colors */}
           <motion.div
             variants={itemVariants}
-            className="w-fit max-w-[calc(100vw-3rem)] bg-black/60 border border-white/10 p-8 rounded-3xl shadow-2xl backdrop-blur-md"
-            onMouseEnter={() => setActiveConfigStep('exterior')}
+            className="w-fit max-w-[calc(100vw-3rem)]"
           >
+            <TiltCard
+              maxTilt={6}
+              perspective={1000}
+              cardClassName="p-8"
+              onMouseEnter={() => setActiveConfigStep('exterior')}
+            >
             <div className="mb-6 flex items-center justify-between">
               <div>
                 <p className="text-[10px] font-medium uppercase tracking-[0.3em] text-[#ef4444]">
@@ -134,6 +128,7 @@ export default function ConfigureSection() {
                 )
               })}
             </div>
+            </TiltCard>
           </motion.div>
 
           {/* Right Side: Interior & Summary */}
@@ -141,8 +136,10 @@ export default function ConfigureSection() {
             variants={itemVariants}
             className="w-full lg:w-[400px] flex-shrink-0 flex flex-col gap-6"
           >
-            <div
-              className="bg-black/60 border border-white/10 p-8 rounded-3xl shadow-2xl backdrop-blur-md"
+            <TiltCard
+              maxTilt={6}
+              perspective={1000}
+              cardClassName="p-8"
               onMouseEnter={() => setActiveConfigStep('interior')}
             >
               <p className="text-[10px] font-medium uppercase tracking-[0.3em] text-[#ef4444]">
@@ -178,41 +175,14 @@ export default function ConfigureSection() {
                   )
                 })}
               </div>
-            </div>
+            </TiltCard>
 
-            {/* Environment Selection */}
-            <div
-              className="bg-black/60 border border-white/10 p-8 rounded-3xl shadow-2xl backdrop-blur-md"
-              onMouseEnter={() => setActiveConfigStep('none')}
-            >
-              <p className="text-[10px] font-medium uppercase tracking-[0.3em] text-[#0ea5e9]">
-                Environment
-              </p>
-              <div className="mt-6 flex gap-2">
-                {environments.map((env) => {
-                  const isSelected = selectedEnvironment === env.id
-                  return (
-                    <button
-                      key={env.id}
-                      type="button"
-                      onClick={() => setEnvironment(env.id)}
-                      className={`flex-1 rounded-xl border px-3 py-3 text-center transition-all duration-300 ${isSelected
-                          ? 'border-[#0ea5e9]/50 bg-[#0ea5e9]/10 text-white'
-                          : 'border-white/5 text-white/40 hover:border-white/20 hover:text-white/80'
-                        }`}
-                    >
-                      <span className="text-xs font-medium tracking-wide">
-                        {env.name}
-                      </span>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
 
             {/* Request Build CTA */}
-            <div
-              className="bg-black/60 border border-white/10 p-8 rounded-3xl shadow-2xl backdrop-blur-md"
+            <TiltCard
+              maxTilt={6}
+              perspective={1000}
+              cardClassName="p-8"
               onMouseEnter={() => setActiveConfigStep('none')}
             >
               <div className="flex justify-between items-center mb-6">
@@ -256,7 +226,7 @@ export default function ConfigureSection() {
                   </motion.div>
                 )}
               </AnimatePresence>
-            </div>
+            </TiltCard>
           </motion.div>
         </motion.div>
       </div>

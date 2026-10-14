@@ -1,8 +1,8 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import Image from 'next/image'
 import { EASE_CURVE, PERFORMANCE_STATS } from '@/lib/constants'
+import TiltCard from './TiltCard'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -71,15 +71,12 @@ export default function PerformanceSection() {
         viewport={{ once: true, amount: 0.15 }}
         transition={{ duration: 0.9, ease: EASE_CURVE }}
       >
-        {/* Content */}
-        <div
-          className="
-            flex w-full flex-col justify-center
-            px-8 py-12 mx-4
-            lg:w-[42%] lg:py-16 lg:px-14 lg:ml-16
-            bg-black/60 border border-white/10
-            rounded-3xl shadow-2xl
-          "
+        {/* Unified Smoky Glass Performance Panel with 3D Tilt */}
+        <TiltCard
+          maxTilt={8}
+          perspective={1200}
+          className="w-full mx-4 lg:w-[42%] lg:ml-16"
+          cardClassName="flex w-full flex-col justify-center px-8 py-12 lg:py-16 lg:px-14"
         >
           <motion.div
             initial={{ opacity: 0, y: 40 }}
@@ -177,7 +174,7 @@ export default function PerformanceSection() {
               />
             ))}
           </div>
-        </div>
+        </TiltCard>
 
         {/* Spacer for 3D car to be visible on the right */}
         <div className="hidden lg:block lg:w-7/12" />
